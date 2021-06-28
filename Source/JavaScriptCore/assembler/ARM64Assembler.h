@@ -2655,7 +2655,7 @@ public:
 
     unsigned debugOffset() { return m_buffer.debugOffset(); }
 
-#if OS(LINUX) && COMPILER(GCC_OR_CLANG)
+#if (OS(LINUX) && COMPILER(GCC_OR_CLANG)) || (OS(MAC_OS_X) && defined(__arm64__))
     static inline void linuxPageFlush(uintptr_t begin, uintptr_t end)
     {
         __builtin___clear_cache(reinterpret_cast<char*>(begin), reinterpret_cast<char*>(end));
@@ -2666,7 +2666,7 @@ public:
     {
 #if OS(IOS)
         sys_cache_control(kCacheFunctionPrepareForExecution, code, size);
-#elif OS(LINUX)
+#elif OS(LINUX) || (OS(MAC_OS_X) && defined(__arm64__))
         size_t page = pageSize();
         uintptr_t current = reinterpret_cast<uintptr_t>(code);
         uintptr_t end = current + size;

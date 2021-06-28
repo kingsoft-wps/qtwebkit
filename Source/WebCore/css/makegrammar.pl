@@ -92,6 +92,6 @@ close HPP;
 print HEADER "#endif\n";
 close HEADER;
 
-unlink("$fileBase.cpp.h");
-unlink("$fileBase.hpp");
+# unlink("$fileBase.cpp.h");
+# unlink("$fileBase.hpp");
 

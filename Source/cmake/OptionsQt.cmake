@@ -74,21 +74,25 @@ macro(CHECK_QT5_PRIVATE_INCLUDE_DIRS _qt_component _header)
         int main() { return 0; }
     "
     )
-    set(CMAKE_REQUIRED_INCLUDES ${Qt5${_qt_component}_PRIVATE_INCLUDE_DIRS})
-    set(CMAKE_REQUIRED_LIBRARIES Qt5::${_qt_component})
+    if(APPLE)
+        include_directories("${_qt5_install_prefix}/../../include")
+    else()
+        set(CMAKE_REQUIRED_INCLUDES ${Qt5${_qt_component}_PRIVATE_INCLUDE_DIRS})
+        set(CMAKE_REQUIRED_LIBRARIES Qt5::${_qt_component})
 
-    # Avoid check_include_file_cxx() because it performs linking but doesn't support CMAKE_REQUIRED_LIBRARIES (doh!)
-    check_cxx_source_compiles("${INCLUDE_TEST_SOURCE}" Qt5${_qt_component}_PRIVATE_HEADER_FOUND)
+        # Avoid check_include_file_cxx() because it performs linking but doesn't support CMAKE_REQUIRED_LIBRARIES (doh!)
+        check_cxx_source_compiles("${INCLUDE_TEST_SOURCE}" Qt5${_qt_component}_PRIVATE_HEADER_FOUND)
 
-    unset(INCLUDE_TEST_SOURCE)
-    unset(CMAKE_REQUIRED_INCLUDES)
-    unset(CMAKE_REQUIRED_LIBRARIES)
+        unset(INCLUDE_TEST_SOURCE)
+        unset(CMAKE_REQUIRED_INCLUDES)
+        unset(CMAKE_REQUIRED_LIBRARIES)
 
-    if (NOT Qt5${_qt_component}_PRIVATE_HEADER_FOUND)
-        message(FATAL_ERROR "Header ${_header} is not found. Please make sure that:
-    1. Private headers of Qt5${_qt_component} are installed
-    2. Qt5${_qt_component}_PRIVATE_INCLUDE_DIRS is correctly defined in Qt5${_qt_component}Config.cmake")
-    endif ()
+        if (NOT Qt5${_qt_component}_PRIVATE_HEADER_FOUND)
+            message(FATAL_ERROR "Header ${_header} is not found. Please make sure that:
+        1. Private headers of Qt5${_qt_component} are installed
+        2. Qt5${_qt_component}_PRIVATE_INCLUDE_DIRS is correctly defined in Qt5${_qt_component}Config.cmake")
+        endif ()
+    endif()
 endmacro()
 
 macro(QT_ADD_EXTRA_WEBKIT_TARGET_EXPORT target)
@@ -427,6 +431,40 @@ if (WIN32)
     set(USE_SYSTEM_MALLOC 1)
 endif ()
 
+if (MSVC)
+    if (NOT WEBKIT_LIBRARIES_DIR)
+        if (DEFINED ENV{WEBKIT_LIBRARIES})
+            set(WEBKIT_LIBRARIES_DIR "$ENV{WEBKIT_LIBRARIES}")
+        else ()
+            set(WEBKIT_LIBRARIES_DIR "${CMAKE_SOURCE_DIR}/WebKitLibraries/win")
+        endif ()
+    endif ()
+
+    include_directories("${CMAKE_BINARY_DIR}/DerivedSources/ForwardingHeaders" "${CMAKE_BINARY_DIR}/DerivedSources" "${WEBKIT_LIBRARIES_DIR}/include")
+    set(CMAKE_INCLUDE_PATH "${WEBKIT_LIBRARIES_DIR}/include")
+    # bundled FindZlib is strange
+    set(ZLIB_ROOT "${WEBKIT_LIBRARIES_DIR}/include")
+    if (${MSVC_CXX_ARCHITECTURE_ID} STREQUAL "X86")
+        link_directories("${CMAKE_BINARY_DIR}/lib32" "${WEBKIT_LIBRARIES_DIR}/lib32")
+        set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib32)
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib32)
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin32)
+        set(CMAKE_LIBRARY_PATH "${WEBKIT_LIBRARIES_DIR}/lib32")
+    else ()
+        link_directories("${CMAKE_BINARY_DIR}/lib64" "${WEBKIT_LIBRARIES_DIR}/lib64")
+        set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib64)
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib64)
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin64)
+        set(CMAKE_LIBRARY_PATH "${WEBKIT_LIBRARIES_DIR}/lib64")
+    endif ()
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+endif ()
+
 if (DEFINED ENV{SQLITE3SRCDIR})
     get_filename_component(SQLITE3SRC_ABS_DIR $ENV{SQLITE3SRCDIR} ABSOLUTE)
     set(SQLITE3_SOURCE_DIR ${SQLITE3SRC_ABS_DIR} CACHE PATH "Path to SQLite sources to use instead of system library" FORCE)
@@ -707,7 +745,7 @@ if (FORCE_DEBUG_INFO)
        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--gdb-index")
     endif ()
 
-    if (MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+    if (MSVC)
         # Create pdb files for debugging purposes, also for Release builds
         set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /Zi")
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
@@ -877,6 +915,9 @@ if (MSVC)
         /wd4706 /wd4800 /wd4819 /wd4951 /wd4952 /wd4996 /wd6011 /wd6031 /wd6211
         /wd6246 /wd6255 /wd6387
     )
+
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /Zc:threadSafeInit-")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:threadSafeInit-")
 
     add_compile_options(/GS)
 

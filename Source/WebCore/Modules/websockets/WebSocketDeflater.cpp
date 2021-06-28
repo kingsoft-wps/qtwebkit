@@ -33,6 +33,7 @@
 
 #if ENABLE(WEB_SOCKETS) && USE(ZLIB)
 
+#include <zlib.h>
 #include "Logging.h"
 #include <wtf/FastMalloc.h>
 #include <wtf/HashMap.h>
@@ -40,7 +41,6 @@
 #include <wtf/StringExtras.h>
 #include <wtf/text/StringHash.h>
 #include <wtf/text/WTFString.h>
-#include <zlib.h>
 
 namespace WebCore {
 

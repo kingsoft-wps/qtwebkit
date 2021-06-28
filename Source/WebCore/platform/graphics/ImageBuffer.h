@@ -163,6 +163,7 @@ private:
     friend class CrossfadeGeneratedImage;
     friend class NamedImageGeneratedImage;
     friend class GradientImage;
+    friend class ImageBufferContentUseScope;
 
 private:
     ImageBufferData m_data;
@@ -181,6 +182,33 @@ private:
 #if USE(CG)
 String ImageDataToDataURL(const ImageData&, const String& mimeType, const double* quality);
 #endif
+
+class ImageBufferContentUseScope
+{
+public:
+    ImageBufferContentUseScope(ImageBuffer *pImageBuff) : m_pPainter(nullptr), m_pDevice(nullptr)
+    {
+        if (!pImageBuff)
+            return;
+
+        m_pPainter = pImageBuff->m_data.m_painter;
+        if (m_pPainter->isActive()) {
+            m_pDevice = m_pPainter->device();
+            m_pPainter->end();
+        } else {
+            m_pPainter = nullptr;
+        }
+    }
+    ~ImageBufferContentUseScope()
+    {
+        if (m_pPainter)
+            m_pPainter->begin(m_pDevice);
+    }
+
+private:
+    QPainter *m_pPainter;
+    QPaintDevice *m_pDevice;
+};
 
 } // namespace WebCore
 

@@ -802,6 +802,7 @@ void ShadowBlur::drawLayerPieces(GraphicsContext& graphicsContext, const FloatRe
     GraphicsContextStateSaver stateSaver(graphicsContext);
     graphicsContext.setFillColor(m_color);
     graphicsContext.clearShadow();
+    ImageBufferContentUseScope useContent(m_layerImage);
 
     // Note that drawing the ImageBuffer is faster than creating a Image and drawing that,
     // because ImageBuffer::draw() knows that it doesn't have to copy the image bits.

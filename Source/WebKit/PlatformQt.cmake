@@ -841,6 +841,9 @@ if (MSVC)
     )
 
     ADD_PRECOMPILED_HEADER("WebKitWidgetsPrefix.h" "qt/WebKitWidgetsPrefix.cpp" WebKitWidgets_SOURCES)
+
+    ADD_QT_VERSION_RC(WebKitWidgets_SOURCES ${WebKitWidgets_OUTPUT_NAME})
+
 endif ()
 
 if (QT_STATIC_BUILD)

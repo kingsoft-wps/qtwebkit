@@ -47,6 +47,7 @@ if (MSVC)
         add_definitions(/DWEBKIT_EXPORTS /DFRAMEWORK_NAME=WebKit)
     else ()
         ADD_PRECOMPILED_HEADER("WebKitPrefix.h" "qt/WebKitPrefix.cpp" WebKit_SOURCES)
+        ADD_QT_VERSION_RC(WebKit_SOURCES "Qt5WebKit")
     endif ()
 endif ()
 

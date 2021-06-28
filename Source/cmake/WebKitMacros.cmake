@@ -1,3 +1,22 @@
+macro(ADD_QT_VERSION_RC _source _prefix)
+    if (MSVC AND PORT STREQUAL "Qt")
+        set(QT_WEBKIT_FILE_VERSION_BLOCK "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.0.0")
+        set(QT_WEBKIT_PRODUCT_VERSION_BLOCK ${QT_WEBKIT_FILE_VERSION_BLOCK})
+        set(QT_WEBKIT_PRODUCT_NAME "${_prefix}.dll")
+
+        string(REPLACE "." "," QT_WEBKIT_FILE_VERSION ${QT_WEBKIT_FILE_VERSION_BLOCK})
+        string(REPLACE "." "," QT_WEBKIT_PRODUCT_VERSION ${QT_WEBKIT_PRODUCT_VERSION_BLOCK})
+
+        set(_rc_file "${CMAKE_BINARY_DIR}/${_prefix}_Version.rc")
+        configure_file(Version.rc.in ${_rc_file} @ONLY)
+        list(APPEND ${_source} ${_rc_file})
+
+        unset(QT_WEBKIT_FILE_VERSION)
+        unset(QT_WEBKIT_PRODUCT_VERSION)
+        unset(QT_WEBKIT_PRODUCT_NAME)
+    endif ()
+endmacro()
+
 macro(WEBKIT_INCLUDE_CONFIG_FILES_IF_EXISTS)
     set(_file ${CMAKE_CURRENT_SOURCE_DIR}/Platform${PORT}.cmake)
     if (EXISTS ${_file})
